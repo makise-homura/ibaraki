@@ -6,16 +6,16 @@ Being called by `cron` periodically (e.g. once a week), will log in to specific 
 
 ## Requirements
 
-* `bash` on the host Ibaraki is installed and every host being backed up,
+* `bash` and other POSIX tools on the host Ibaraki is installed and every host being backed up,
 * and any of supported archivers on hosts being backed up.
 
 ## Configuration
 
-Configuration consists of `etc/ibaraki/ibaraki.conf`, `etc/ibaraki/archiver_*.conf`, and `etc/ibaraki/host_*.conf`.
+Configuration consists of `/etc/ibaraki/ibaraki.conf`, `/etc/ibaraki/archiver_*.conf`, and `/etc/ibaraki/host_*.conf`.
 
 All config files are written as typical shell scripts, so `#` are comments, no spaces between variable name, `=`, and value, values with spaces should be quoted, `$` substitutions are allowed, etc.
 
-Last ones should be created for every host to back up, and should contain its hostname after `host_`.
+Host configs should be created for every host to back up, and should contain its hostname after `host_`.
 
 E.g., to back up `somehost`, you should create `host_somehost.conf`.
 
@@ -26,15 +26,15 @@ About timed, automatic, and manual modes, see below.
 This is the main config file and it should consist of the following variables:
 
 * `HOSTS`: Space-separated list of hosts to back up. Each host should have its corresponding config file. In timed or automatic mode hosts will be backed up in order they are specified here.
-* `LOGFILE`: Log file which would be used in automatic or timed mode (when sript is ran without parameters). Manual mode (when list of hosts is in command line) will use stdout for this.
+* `LOGFILE`: Log file which would be used in automatic or timed mode (when script is ran without parameters). Manual mode (when list of hosts is in command line) will use `stdout` for this.
 * `SHORTLOGFILE`: Log file which would be used for logging start/finish time in automatic or timed mode. Manual mode won't use this.
 * `BACKUPDIR`: Where to place backup files. Backups will go to corresponding subdirectories for each host.
-* `REMOTENAME`: We will upload this script to remote host under `$TMPDIR` with this name.
-* `ATTEMPTS`: How much times to try to download compressed file from host. After exceeding this amount of attempts we give up.
+* `REMOTENAME`: Ibaraki will upload its remote counterpart to remote host under `$TMPDIR` with this name.
+* `ATTEMPTS`: How much times to try to download compressed file from host. After exceeding this amount of attempts we will give up.
 * `DELETE_IF_GIVEN_UP`: `on` or `off`, should we delete compressed file on remote host if we've given up downloading it.
 * `KEEPFILES`: How much of previous backup files to keep in timed or automatic mode. Oldest files will be deleted if there's more of them than this number. No files are deleted in manual mode.
-* `ENABLE_IONICE`: `on` or `off`, try to lower IO priority for tar command with ionice (otherwise it might cause too much IO load that can render host, which is backing up at the moment, unusable).
-* `LOCAL_TMPDIR`: Local temporary directory to work in. Will be created if not exist, and then deleted if free. Used to temporarily copy downloaded file there and run archive test locally.
+* `ENABLE_IONICE`: `on` or `off`, try to lower IO priority for `tar` command with `ionice` (otherwise it might cause too much IO load that can render host, which is being backed up at the moment, unusable).
+* `LOCAL_TMPDIR`: Local (on the station where `ibaraki` is deployed) temporary directory to work in. Will be created if not exist, and then deleted if empty. Used to temporarily copy downloaded file there and run archive test locally.
 
 Example:
 
@@ -54,7 +54,7 @@ LOCAL_TMPDIR=/tmp/backup
 
 ### archiver_*.conf
 
-Currently supported archivers: 7z, 7za, old7z (you should try it, if your `7z` does not support `-mm`), and plzip.
+Currently supported archivers: `7z`, `7za`, `old7z` (you should try it, if your `7z` does not support `-mm`), and plzip.
 
 So there is a config file for each of them.
 
@@ -65,7 +65,7 @@ You may add your own. Each archiver should support packing and testing operation
 * `ARCHPACK`: Command for packing.
 * `ARCHTEST`: Command for testing.
 * `ARCHEXT`: Extension of archive file.
-* `SPECIFY_ARCHIVE_NAME`: Should we call archiver like `... sourcefile.arc sourcefile` (if `on`; typical for `gzip`, `plzip`, ...), or just `... sourcefile` to get `sourcefile.arc` (if `off`; typical for `7z`, `rar`, ...).
+* `SPECIFY_ARCHIVE_NAME`: Should we call archiver like `... sourcefile.arc sourcefile` (if `on`; typical for `7z`, `rar`, ...), or just `... sourcefile` to get `sourcefile.arc` (if `off`; typical for `gzip`, `plzip`, ...).
 
 Actually, archiver will be called in form:
 
@@ -76,7 +76,7 @@ Actually, archiver will be called in form:
 
 Should contain variables specific for host. Each host should have working `sshd` with SSH key authentication enabled.
 
-* `HOST`: SSH hostname to connect.
+* `HOSTNAME`: SSH hostname to connect.
 * `PORT`: SSH port to connect.
 * `USER`: User:group under which to log in. Remote counterpart of Ibaraki will be ran under these credentials.
 * `TMPDIR`: Remote temporary directory to work in. Will be created if not exist, and then deleted if empty.
@@ -98,12 +98,16 @@ SSHKEY=/etc/ssh/keys/$HOST.pk
 
 ## Install
 
+Generic procedure is:
+
 ```
 cp ibaraki /usr/bin
 ln -s /usr/bin/ibaraki /etc/cron.weekly/ibaraki
 mkdir -p /etc/ibaraki
 cp *.conf /etc/ibaraki
 ```
+
+You may alter it for your own needs.
 
 ## Run
 
