@@ -28,10 +28,10 @@ then
     ENABLE_IONICE=${11}
     shift 11
     echo "--- Determining directory sizes:"
-    sudo du --apparent-size --exclude=.gvfs -chs $@ || quit "Error $? while checking directory sizes."
+    sudo du --apparent-size --exclude=.gvfs --exclude=.cache/gvfs -chs $@ || quit "Error $? while checking directory sizes."
     echo "--- Creating tar file:"
     [ "$ENABLE_IONICE" = "on" ] && IONICE="ionice -t -c3" || IONICE=""
-    sudo $IONICE tar -c --exclude-tag-all=.nobackup --exclude=.gvfs -f $TMPDIR/$FILE.tar $@ # Ignore $?==1, because it's ok while backing something up.
+    sudo $IONICE tar -c --exclude-tag-all=.nobackup --exclude=.gvfs --exclude=.cache/gvfs -f $TMPDIR/$FILE.tar $@ # Ignore $?==1, because it's ok while backing something up.
     [ $? -gt 1 ] && quit "Error $? while creating tar file."
     ls -la $TMPDIR/$FILE.tar || quit "Error $? while listing tar file."
     echo "--- Packing to $ARCHEXT file:"
