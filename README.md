@@ -23,7 +23,7 @@ E.g., to back up `somehost`, you should create `host_somehost.conf`.
 
 About timed, automatic, and manual modes, see below.
 
-This is the main config file and it should consist of the following variables:
+This is the main config file and it should consist of the following variables (all of them are mandatory):
 
 * `HOSTS`: Space-separated list of hosts to back up. Each host should have its corresponding config file. In timed or automatic mode hosts will be backed up in order they are specified here.
 * `LOGFILE`: Log file which would be used in automatic or timed mode (when script is ran without parameters). Manual mode (when list of hosts is in command line) will use `stdout` for this.
@@ -34,6 +34,7 @@ This is the main config file and it should consist of the following variables:
 * `DELETE_IF_GIVEN_UP`: `on` or `off`, should we delete compressed file on remote host if we've given up downloading it.
 * `KEEPFILES`: How much of previous backup files to keep in timed or automatic mode. Oldest files will be deleted if there's more of them than this number. No files are deleted in manual mode.
 * `ENABLE_IONICE`: `on` or `off`, try to lower IO priority for `tar` command with `ionice` (otherwise it might cause too much IO load that can render host, which is being backed up at the moment, unusable).
+* `ENABLE_CHECK`: `on` or `off`, check integrity of archive on host prior to uploading it to the backup server.
 * `LOCAL_TMPDIR`: Local (on the station where `ibaraki` is deployed) temporary directory to work in. Will be created if not exist, and then deleted if empty. Used to temporarily copy downloaded file there and run archive test locally.
 
 Example:
@@ -48,8 +49,8 @@ ATTEMPTS=10
 DELETE_IF_GIVEN_UP=off
 KEEPFILES=3
 ENABLE_IONICE=on
+ENABLE_CHECK=off
 LOCAL_TMPDIR=/tmp/backup
-
 ```
 
 ### archiver_*.conf
