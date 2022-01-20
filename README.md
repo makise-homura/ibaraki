@@ -30,7 +30,7 @@ This is the main config file and it should consist of the following variables (a
 * `SHORTLOGFILE`: Log file which would be used for logging start/finish time in automatic or timed mode. Manual mode won't use this.
 * `BACKUPDIR`: Where to place backup files. Backups will go to corresponding subdirectories for each host.
 * `REMOTENAME`: Ibaraki will upload its remote counterpart to remote host under `$TMPDIR` with this name.
-* `LOCAL_TMPDIR`: Local (on the station where `ibaraki` is deployed) temporary directory to work in. Will be created if not exist, and then deleted if empty. Used to temporarily copy downloaded file there and run archive test locally.
+* `LOCAL_TMPDIR`: Local (on the station where `ibaraki` is deployed) temporary directory to work in. Will be created if not exist, and then deleted if empty or `REMOVE_EVEN_IF_NON_EMPTY` is `on`. Used to temporarily copy downloaded file there and run archive test locally.
 * `ATTEMPTS`: How much times to try to download compressed file from host. After exceeding this amount of attempts we will give up.
 * `KEEPFILES`: How much of previous backup files to keep in timed or automatic mode. Oldest files will be deleted if there's more of them than this number. No files are deleted in manual mode.
 
@@ -39,8 +39,8 @@ Also it can include the following flags (`on` or `off`, default is `off` if flag
 * `ENABLE_IONICE`: try to lower IO priority for `tar` command with `ionice` (otherwise it might cause too much IO load that can render host, which is being backed up at the moment, unusable).
 * `DELETE_IF_GIVEN_UP`: should we delete compressed file on remote host if we've given up downloading it.
 * `ENABLE_CHECK`: check integrity of archive on host prior to uploading it to the backup server.
-* `REMOVE_EVEN_IF_NON_EMPTY`: remove temporary backup directory even if it already contains files.
-* `IGNORE_FAIL_ON_NON_EMPTY`: silently ignore if temporary backup directory already contains files and thus was not deleted.
+* `REMOVE_EVEN_IF_NON_EMPTY`: remove temporary backup directories (`TMPDIR` and `LOCAL_TMPDIR`) even if it already contain files.
+* `IGNORE_FAIL_ON_NON_EMPTY`: silently ignore if temporary backup directories (`TMPDIR` and `LOCAL_TMPDIR`) already contain files and thus was not deleted (have an effect only if `REMOVE_EVEN_IF_NON_EMPTY` is `off`).
 
 Example:
 
@@ -92,7 +92,7 @@ Should contain variables specific for host (all of them are mandatory). Each hos
 * `HOSTNAME`: SSH hostname to connect.
 * `PORT`: SSH port to connect.
 * `USER`: User:group under which to log in. Remote counterpart of Ibaraki will be ran under these credentials.
-* `TMPDIR`: Remote temporary directory to work in. Will be created if not exist, and then deleted if empty.
+* `TMPDIR`: Remote temporary directory to work in. Will be created if not exist, and then deleted if empty or `REMOVE_EVEN_IF_NON_EMPTY` is `on`.
 * `DIRECTORIES`: Remote directories to backup, separated by spaces.
 * `ARCHIVER`: Which archiver to use to pack data. Corresponding `archiver_*.conf` should be in `/etc/ibaraki`, and archiver binary should be available on remote host.
 * `SSHKEY`: Private key file to authenticate on remote host.
