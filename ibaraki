@@ -128,7 +128,7 @@ else
 
         # Copy original script to remote host
         echo "--- Copying script to remote host:"
-        ssh_run "Created $HOST:$TMPDIR." "Can't create $HOST:$TMPDIR." mkdir -p "$TMPDIR" || quit "\n--- Error communicating $HOST: unable to create working directory!"
+        ssh_run "Created $HOST:$TMPDIR." "Can't create $HOST:$TMPDIR." "mkdir -p \"$TMPDIR\"" || quit "\n--- Error communicating $HOST: unable to create working directory!"
         scp_to $0 "$TMPDIR/$REMOTENAME" || quit "\n--- Error communicating $HOST: unable to upload remote side script!"
 
         SUCCESS="no"
@@ -141,8 +141,8 @@ else
 
             # Determine size and checksum
             echo -e "--- Calculating a checksum:"
-            SRC_SIZE="`ssh_run '' 'Failure' stat --printf=%s "$TMPDIR/$FILE.tar.$ARCHEXT" 2>&1 | grep -v 'REMOTE CALL'`"
-            SRC_MD5="`ssh_run '' 'Failure ' md5sum "$TMPDIR/$FILE.tar.$ARCHEXT" 2>&1 | grep -v 'REMOTE CALL' | cut -d' ' -f1`"
+            SRC_SIZE="`ssh_run "" "Failure " "stat --printf=%s \"$TMPDIR/$FILE.tar.$ARCHEXT\"" 2>&1 | grep -v 'REMOTE CALL'`"
+            SRC_MD5="`ssh_run "" "Failure " "md5sum \"$TMPDIR/$FILE.tar.$ARCHEXT\"" 2>&1 | grep -v 'REMOTE CALL' | cut -d' ' -f1`"
             echo "$HOST:$TMPDIR/$FILE.tar.$ARCHEXT: Size=$SRC_SIZE, MD5=$SRC_MD5."
             FAILED="no"
             echo "$SRC_SIZE" | grep -q 'Failure' && FAILED="yes"
@@ -199,16 +199,16 @@ else
         if [ "$DELETE_IF_GIVEN_UP" = "on" -o "$SUCCESS" = "yes" ]
         then
             echo -e "\n--- Deleting non needed $ARCHEXT file:"
-            ssh_run "Deleted $HOST:$TMPDIR/$FILE.tar.$ARCHEXT." "Can't delete $HOST:$TMPDIR/$FILE.tar.$ARCHEXT." rm "$TMPDIR/$FILE.tar.$ARCHEXT"
+            ssh_run "Deleted $HOST:$TMPDIR/$FILE.tar.$ARCHEXT." "Can't delete $HOST:$TMPDIR/$FILE.tar.$ARCHEXT." "rm \"$TMPDIR/$FILE.tar.$ARCHEXT\""
         else
             echo -e "\n--- Exceeded attempts to download file, won't delete it on the server!"
         fi
-        ssh_run "Deleted $HOST:$TMPDIR/$REMOTENAME." "Can't delete $HOST:$TMPDIR/$REMOTENAME." rm "$TMPDIR/$REMOTENAME"
+        ssh_run "Deleted $HOST:$TMPDIR/$REMOTENAME." "Can't delete $HOST:$TMPDIR/$REMOTENAME." "rm \"$TMPDIR/$REMOTENAME\""
         if ["$IGNORE_FAIL_ON_NON_EMPTY" = "on" ]
         then
-            ssh_run "Deleted $HOST:$TMPDIR (if was empty)." "Can't delete $HOST:$TMPDIR." rmdir --ignore-fail-on-non-empty "$TMPDIR"
+            ssh_run "Deleted $HOST:$TMPDIR (if was empty)." "Can't delete $HOST:$TMPDIR." "rmdir --ignore-fail-on-non-empty \"$TMPDIR\""
         else
-            ssh_run "Deleted $HOST:$TMPDIR." "Can't delete $HOST:$TMPDIR, probably artifacts of older backup attempts exist." rmdir "$TMPDIR"
+            ssh_run "Deleted $HOST:$TMPDIR." "Can't delete $HOST:$TMPDIR, probably artifacts of older backup attempts exist." "rmdir \"$TMPDIR\""
         fi
         [ "$SUCCESS" = "no" ] && RV=`echo $RV + 1 | bc`
     done
