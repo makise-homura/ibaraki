@@ -38,7 +38,7 @@ Also it can include the following flags (`on` or `off`, default is `off` if flag
 
 * `ENABLE_IONICE`: try to lower IO priority for `tar` command with `ionice` (otherwise it might cause too much IO load that can render host, which is being backed up at the moment, unusable).
 * `DELETE_IF_GIVEN_UP`: should we delete compressed file on remote host if we've given up downloading it.
-* `ENABLE_CHECK`: check integrity of archive on host prior to uploading it to the backup server (similar checks on backup server are performed always). Useful if host cache of RAM may be unreliable.
+* `CHECK_ON_HOST`: check integrity of archive on host prior to uploading it to the backup server (similar checks on backup server are performed always). Useful if host cache of RAM may be unreliable.
 * `CHECK_BOTH_WAYS`: if `off`, check integrity of archive after it was uploaded to the backup server. If `on`, also copy it to `LOCAL_TMPDIR` and check it there. Useful if backup server may be unreliable.
 * `REMOVE_EVEN_IF_NON_EMPTY`: remove temporary backup directories (`TMPDIR` and `LOCAL_TMPDIR`) even if it already contain files.
 * `IGNORE_FAIL_ON_NON_EMPTY`: silently ignore if temporary backup directories (`TMPDIR` and `LOCAL_TMPDIR`) already contain files and thus was not deleted (have an effect only if `REMOVE_EVEN_IF_NON_EMPTY` is `off`).
@@ -55,7 +55,7 @@ LOCAL_TMPDIR=/tmp/backup
 ATTEMPTS=10
 KEEPFILES=3
 ENABLE_IONICE=on
-ENABLE_CHECK=off
+CHECK_ON_HOST=off
 CHECK_BOTH_WAYS=on
 DELETE_IF_GIVEN_UP=off
 REMOVE_EVEN_IF_NON_EMPTY=off
