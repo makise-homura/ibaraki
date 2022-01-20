@@ -163,24 +163,36 @@ else
                     if [ "$TGT_MD5" = "$SRC_MD5" ]
                     then
                         echo "$BACKUPDIR/$HOST/$FILE.tar.$ARCHEXT: Size=$TGT_SIZE, MD5=$TGT_MD5, matched."
-                        echo -n "Copying $BACKUPDIR/$HOST/$FILE.tar.$ARCHEXT -> $TMPDIR/$FILE.tar.$ARCHEXT..."
-                        mkdir -p "$LOCAL_TMPDIR"
-                        cp "$BACKUPDIR/$HOST/$FILE.tar.$ARCHEXT" "$LOCAL_TMPDIR/$FILE.tar.$ARCHEXT"
-                        echo -n "Ok, calculating checksum..."
-                        TMP_MD5="`md5sum "$LOCAL_TMPDIR/$FILE.tar.$ARCHEXT" 2>&1 | cut -d' ' -f1`"
-                        echo "Ok."
-                        if [ "$TGT_MD5" = "$TMP_MD5" ]
+                        if [ "$CHECK_BOTH_WAYS" = "on" ]
                         then
-                            echo "Testing with $ARCHIVER:"
-                            if $ARCHIVER $ARCHTEST $ARCHARGS "$LOCAL_TMPDIR/$FILE.tar.$ARCHEXT" 2>&1
+                            echo -n "Copying $BACKUPDIR/$HOST/$FILE.tar.$ARCHEXT -> $LOCAL_TMPDIR/$FILE.tar.$ARCHEXT..."
+                            mkdir -p "$LOCAL_TMPDIR"
+                            cp "$BACKUPDIR/$HOST/$FILE.tar.$ARCHEXT" "$LOCAL_TMPDIR/$FILE.tar.$ARCHEXT"
+                            echo -n "Ok, calculating checksum..."
+                            TMP_MD5="`md5sum "$LOCAL_TMPDIR/$FILE.tar.$ARCHEXT" 2>&1 | cut -d' ' -f1`"
+                            echo "Ok."
+                            if [ "$TGT_MD5" = "$TMP_MD5" ]
+                            then
+                                echo "Testing $LOCAL_TMPDIR/$FILE.tar.$ARCHEXT with $ARCHIVER:"
+                                if $ARCHIVER $ARCHTEST $ARCHARGS "$LOCAL_TMPDIR/$FILE.tar.$ARCHEXT" 2>&1
+                                then
+                                    SUCCESS="yes"
+                                    break
+                                else
+                                    echo "$ARCHIVER test did not succeed. Warning: this may indicate cache failure!"
+                                fi
+                            else
+                                echo "Copying file to $LOCAL_TMPDIR did not succeed (source: $TGT_MD5, target: $TMP_MD5). Warning: this may indicate storage failure!"
+                            fi
+                        else
+                            echo "Testing $BACKUPDIR/$HOST/$FILE.tar.$ARCHEXT with $ARCHIVER:"
+                            if $ARCHIVER $ARCHTEST $ARCHARGS "$BACKUPDIR/$HOST/$FILE.tar.$ARCHEXT" 2>&1
                             then
                                 SUCCESS="yes"
                                 break
                             else
                                 echo "$ARCHIVER test did not succeed. Warning: this may indicate cache failure!"
                             fi
-                        else
-                            echo "Copying file from NAS did not succeed (source: $TGT_MD5, target: $TMP_MD5). Warning: this may indicate cache failure!"
                         fi
                     else
                         echo "File checksums do not match (source: $SRC_MD5, target: $TGT_MD5). Possibly file was downloaded incorrectly."
@@ -196,12 +208,12 @@ else
         # Delete unneeded files and directory from local host
         [ -f "$LOCAL_TMPDIR/$FILE.tar.$ARCHEXT" ] && rm "$LOCAL_TMPDIR/$FILE.tar.$ARCHEXT" 2>&1
 
-        if ["$REMOVE_EVEN_IF_NON_EMPTY" = "on" ]
+        if [ "$REMOVE_EVEN_IF_NON_EMPTY" = "on" ]
         then
             ssh_run "Deleted $HOST:$TMPDIR." "Can't delete $HOST:$TMPDIR." "rm -rf \"$TMPDIR\""
             rm -rf "$LOCAL_TMPDIR" 2>&1
         else
-            if ["$IGNORE_FAIL_ON_NON_EMPTY" = "on" ]
+            if [ "$IGNORE_FAIL_ON_NON_EMPTY" = "on" ]
             then
                 rmdir --ignore-fail-on-non-empty "$LOCAL_TMPDIR" 2>&1
             else
@@ -219,11 +231,11 @@ else
         fi
         ssh_run "Deleted $HOST:$TMPDIR/$REMOTENAME." "Can't delete $HOST:$TMPDIR/$REMOTENAME." "rm \"$TMPDIR/$REMOTENAME\""
 
-        if ["$REMOVE_EVEN_IF_NON_EMPTY" = "on" ]
+        if [ "$REMOVE_EVEN_IF_NON_EMPTY" = "on" ]
         then
             ssh_run "Deleted $HOST:$TMPDIR." "Can't delete $HOST:$TMPDIR." "rm -rf \"$TMPDIR\""
         else
-            if ["$IGNORE_FAIL_ON_NON_EMPTY" = "on" ]
+            if [ "$IGNORE_FAIL_ON_NON_EMPTY" = "on" ]
             then
                 ssh_run "Deleted $HOST:$TMPDIR (if was empty)." "Can't delete $HOST:$TMPDIR." "rmdir --ignore-fail-on-non-empty \"$TMPDIR\""
             else
