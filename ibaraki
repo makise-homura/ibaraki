@@ -58,6 +58,7 @@ fi
 if [ -f "${CONFIGDIR}/ibaraki.conf" ]
 then
     . "${CONFIGDIR}/ibaraki.conf"
+    [ -z "$CHECK_ON_HOST" -a "$ENABLE_CHECK" ] && CHECK_ON_HOST="$ENABLE_CHECK"
 else
     echo "No config file exist." >&2
     exit 1
