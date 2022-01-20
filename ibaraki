@@ -207,18 +207,20 @@ else
         [ "$SUCCESS" = "no" ] && echo "GIVING UP"
 
         # Delete unneeded files and directory from local host
-        [ -f "$LOCAL_TMPDIR/$FILE.tar.$ARCHEXT" ] && rm "$LOCAL_TMPDIR/$FILE.tar.$ARCHEXT" 2>&1
-
-        if [ "$REMOVE_EVEN_IF_NON_EMPTY" = "on" ]
+        if [ "$CHECK_BOTH_WAYS" = "on" ]
         then
-            ssh_run "Deleted $HOST:$TMPDIR." "Can't delete $HOST:$TMPDIR." "rm -rf \"$TMPDIR\""
-            rm -rf "$LOCAL_TMPDIR" 2>&1
-        else
-            if [ "$IGNORE_FAIL_ON_NON_EMPTY" = "on" ]
+            [ -f "$LOCAL_TMPDIR/$FILE.tar.$ARCHEXT" ] && rm "$LOCAL_TMPDIR/$FILE.tar.$ARCHEXT" 2>&1
+
+            if [ "$REMOVE_EVEN_IF_NON_EMPTY" = "on" ]
             then
-                rmdir --ignore-fail-on-non-empty "$LOCAL_TMPDIR" 2>&1
+                rm -rf "$LOCAL_TMPDIR" 2>&1
             else
-                rmdir "$LOCAL_TMPDIR" 2>&1
+                if [ "$IGNORE_FAIL_ON_NON_EMPTY" = "on" ]
+                then
+                    rmdir --ignore-fail-on-non-empty "$LOCAL_TMPDIR" 2>&1
+                else
+                    rmdir "$LOCAL_TMPDIR" 2>&1
+                fi
             fi
         fi
 

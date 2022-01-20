@@ -23,7 +23,7 @@ E.g., to back up `somehost`, you should create `host_somehost.conf`.
 
 About timed, automatic, and manual modes, see below.
 
-This is the main config file and it should consist of the following variables (all of them are mandatory):
+This is the main config file and it should consist of the following variables (all of them are mandatory, except `LOCAL_TMPDIR` if `CHECK_BOTH_WAYS` is `off`):
 
 * `HOSTS`: Space-separated list of hosts to back up. Each host should have its corresponding config file. In timed or automatic mode hosts will be backed up in order they are specified here.
 * `LOGFILE`: Log file which would be used in automatic or timed mode (when script is ran without parameters). Manual mode (when list of hosts is in command line) will use `stdout` for this.
