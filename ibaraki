@@ -168,7 +168,7 @@ else
                         then
                             echo -n "Copying $BACKUPDIR/$HOST/$FILE.tar.$ARCHEXT -> $LOCAL_TMPDIR/$FILE.tar.$ARCHEXT..."
                             mkdir -p "$LOCAL_TMPDIR"
-                            cp "$BACKUPDIR/$HOST/$FILE.tar.$ARCHEXT" "$LOCAL_TMPDIR/$FILE.tar.$ARCHEXT"
+                            cp "$BACKUPDIR/$HOST/$FILE.tar.$ARCHEXT" "$LOCAL_TMPDIR/$FILE.tar.$ARCHEXT" 2>&1 > /dev/null
                             echo -n "Ok, calculating checksum..."
                             TMP_MD5="`md5sum "$LOCAL_TMPDIR/$FILE.tar.$ARCHEXT" 2>&1 | cut -d' ' -f1`"
                             echo "Ok."
@@ -206,20 +206,21 @@ else
         done
         [ "$SUCCESS" = "no" ] && echo "GIVING UP"
 
+        echo "--- Cleaning up:"
         # Delete unneeded files and directory from local host
         if [ "$CHECK_BOTH_WAYS" = "on" ]
         then
-            [ -f "$LOCAL_TMPDIR/$FILE.tar.$ARCHEXT" ] && rm "$LOCAL_TMPDIR/$FILE.tar.$ARCHEXT" 2>&1
+            [ -f "$LOCAL_TMPDIR/$FILE.tar.$ARCHEXT" ] && rm "$LOCAL_TMPDIR/$FILE.tar.$ARCHEXT" 2>&1 && echo "Deleted $LOCAL_TMPDIR/$FILE.tar.$ARCHEXT." || echo "Can't delete $LOCAL_TMPDIR/$FILE.tar.$ARCHEXT."
 
             if [ "$REMOVE_EVEN_IF_NON_EMPTY" = "on" ]
             then
-                rm -rf "$LOCAL_TMPDIR" 2>&1
+                rm -rf "$LOCAL_TMPDIR" 2>&1 && echo "Deleted $LOCAL_TMPDIR." || echo "Can't delete $LOCAL_TMPDIR."
             else
                 if [ "$IGNORE_FAIL_ON_NON_EMPTY" = "on" ]
                 then
-                    rmdir --ignore-fail-on-non-empty "$LOCAL_TMPDIR" 2>&1
+                    rmdir --ignore-fail-on-non-empty "$LOCAL_TMPDIR" 2>&1 && echo "Deleted $LOCAL_TMPDIR (if was empty)." || echo "Can't delete $LOCAL_TMPDIR."
                 else
-                    rmdir "$LOCAL_TMPDIR" 2>&1
+                    rmdir "$LOCAL_TMPDIR" 2>&1 && echo "Deleted $LOCAL_TMPDIR." || echo "Can't delete $LOCAL_TMPDIR, probably artifacts of older backup attempts exist."
                 fi
             fi
         fi
@@ -227,10 +228,9 @@ else
         # Delete unneeded files and directory from remote host
         if [ "$DELETE_IF_GIVEN_UP" = "on" -o "$SUCCESS" = "yes" ]
         then
-            echo -e "\n--- Deleting non needed $ARCHEXT file:"
             ssh_run "Deleted $HOST:$TMPDIR/$FILE.tar.$ARCHEXT." "Can't delete $HOST:$TMPDIR/$FILE.tar.$ARCHEXT." "rm \"$TMPDIR/$FILE.tar.$ARCHEXT\""
         else
-            echo -e "\n--- Exceeded attempts to download file, won't delete it on the server!"
+            echo "Exceeded download attempts, won't delete $HOST:$TMPDIR/$FILE.tar.$ARCHEXT!"
         fi
         ssh_run "Deleted $HOST:$TMPDIR/$REMOTENAME." "Can't delete $HOST:$TMPDIR/$REMOTENAME." "rm \"$TMPDIR/$REMOTENAME\""
 
