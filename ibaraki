@@ -1,11 +1,11 @@
 #!/bin/bash
 
-DEBUG=${DEBUG:-off}
-CONFIGDIR=${CONFIGDIR:-/etc/ibaraki}
+DEBUG="${DEBUG:-off}"
+CONFIGDIR="${CONFIGDIR:-/etc/ibaraki}"
 
 quit()
 {
-    echo -e $@
+    echo -e "$@"
     exit 64
 }
 
@@ -16,44 +16,48 @@ quit()
 # Also you can exclude any directory (and its subdirectories) from archiving, if you create .nobackup file there.
 if [ "$1" == "--create" ]
 then
-    FILE=${2}
-    USER=${3}
-    TMPDIR=${4}
-    ARCHIVER=${5}
-    ARCHPACK=${6}
-    ARCHTEST=${7}
-    ARCHARGS=${8}
-    ARCHEXT=${9}
-    SPECIFY_ARCHIVE_NAME=${10}
-    ENABLE_IONICE=${11}
-    ENABLE_CHECK=${12}
+    FILE="${2}"
+    USER="${3}"
+    TMPDIR="${4}"
+    ARCHIVER="${5}"
+    ARCHPACK="${6}"
+    ARCHTEST="${7}"
+    ARCHARGS="${8}"
+    ARCHEXT="${9}"
+    SPECIFY_ARCHIVE_NAME="${10}"
+    ENABLE_IONICE="${11}"
+    ENABLE_CHECK="${12}"
     shift 12
     echo "--- Determining directory sizes:"
     sudo du --apparent-size --exclude=.gvfs --exclude=.cache/gvfs -chs $@ || quit "Error $? while checking directory sizes."
     echo "--- Creating tar file:"
     [ "$ENABLE_IONICE" = "on" ] && IONICE="ionice -t -c3" || IONICE=""
-    sudo $IONICE tar -c --exclude-tag-all=.nobackup --exclude=.gvfs --exclude=.cache/gvfs -f $TMPDIR/$FILE.tar $@ # Ignore $?==1, because it's ok while backing something up.
+    sudo $IONICE tar -c --exclude-tag-all=.nobackup --exclude=.gvfs --exclude=.cache/gvfs -f "$TMPDIR/$FILE.tar" $@ # Ignore $?==1, because it's ok while backing something up.
     [ $? -gt 1 ] && quit "Error $? while creating tar file."
-    ls -la $TMPDIR/$FILE.tar || quit "Error $? while listing tar file."
+    ls -la "$TMPDIR/$FILE.tar" || quit "Error $? while listing tar file."
     echo "--- Packing to $ARCHEXT file:"
-    sudo chown $USER $TMPDIR/$FILE.tar || quit "Error $? while chowning tar file."
-    [ "$SPECIFY_ARCHIVE_NAME" = "on" ] && ARCHNAME="$TMPDIR/$FILE.tar.$ARCHEXT" || ARCHNAME=""
-    $ARCHIVER $ARCHPACK $ARCHARGS $ARCHNAME $TMPDIR/$FILE.tar || quit "Error $? while packing tar file into resulting $ARCHEXT file."
-    sudo rm $TMPDIR/$FILE.tar || quit "Error $? while removing tar file."
+    sudo chown "$USER" "$TMPDIR/$FILE.tar" || quit "Error $? while chowning tar file."
+    if [ "$SPECIFY_ARCHIVE_NAME" = "on" ]
+    then
+        $ARCHIVER $ARCHPACK $ARCHARGS "$TMPDIR/$FILE.tar.$ARCHEXT" "$TMPDIR/$FILE.tar" || quit "Error $? while packing tar file into resulting $ARCHEXT file."
+    else
+        $ARCHIVER $ARCHPACK $ARCHARGS "$TMPDIR/$FILE.tar" || quit "Error $? while packing tar file into resulting $ARCHEXT file."
+    fi
+    sudo rm "$TMPDIR/$FILE.tar" || quit "Error $? while removing tar file."
     if [ "$ENABLE_CHECK" = "on" ]
     then
         echo "--- Checking integrity of $ARCHEXT file:"
-        ls -la $TMPDIR/$FILE.tar.$ARCHEXT || quit "Error $? while listing resulting $ARCHEXT file."
-        $ARCHIVER $ARCHTEST $ARCHARGS $TMPDIR/$FILE.tar.$ARCHEXT || quit "Error $? while testing resulting $ARCHEXT file."
+        ls -la "$TMPDIR/$FILE.tar.$ARCHEXT" || quit "Error $? while listing resulting $ARCHEXT file."
+        $ARCHIVER $ARCHTEST $ARCHARGS "$TMPDIR/$FILE.tar.$ARCHEXT" || quit "Error $? while testing resulting $ARCHEXT file."
     fi
     exit 0
 fi
 
 # Client part
 
-if [ -f ${CONFIGDIR}/ibaraki.conf ]
+if [ -f "${CONFIGDIR}/ibaraki.conf" ]
 then
-    . ${CONFIGDIR}/ibaraki.conf
+    . "${CONFIGDIR}/ibaraki.conf"
 else
     echo "No config file exist." >&2
     exit 1
@@ -67,7 +71,7 @@ ssh_run()
     NAK="$2"
     shift 2
     [ "$DEBUG" = "on" ] && echo "REMOTE CALL @ $HOST: $@"
-    ssh -tt -l $USERNAME -i $SSHKEY -o LogLevel=QUIET -o PreferredAuthentications=publickey -p $PORT $HOSTNAME -C $@ 2>&1
+    ssh -tt -l "$USERNAME" -i "$SSHKEY" -o LogLevel=QUIET -o PreferredAuthentications=publickey -p "$PORT" "$HOSTNAME" -C "$@" 2>&1
     RV=$?
     [ $RV -eq 0 ] && echo "$ACK" || echo "$NAK"
     return $RV
@@ -78,7 +82,7 @@ ssh_run()
 scp_from()
 {
     [ "$DEBUG" = "on" ] && echo "REMOTE COPY: $HOST:$1 -> $2"
-    scp -i $SSHKEY -P $PORT "$USERNAME@$HOSTNAME:$1" "$2" 2>&1
+    scp -i "$SSHKEY" -P "$PORT" "$USERNAME@$HOSTNAME:$1" "$2" 2>&1
 }
 
 # Usage: scp_from LOCALSRC REMOTEDEST
@@ -86,46 +90,46 @@ scp_from()
 scp_to()
 {
     [ "$DEBUG" = "on" ] && echo "REMOTE COPY: $1 -> $HOST:$2"
-    scp -i $SSHKEY -P $PORT "$1" "$USERNAME@$HOSTNAME:$2" 2>&1
+    scp -i "$SSHKEY" -P "$PORT" "$1" "$USERNAME@$HOSTNAME:$2" 2>&1
 }
 
 if [ -z "$1" ]
 then
     for HOST in $HOSTS
     do
-        echo " ==== Backing up $HOST." >> $LOGFILE
-        echo "`date`: Ibaraki has STARTED backing up $HOST." >> $SHORTLOGFILE
-        if $0 $HOST 2>&1 >> $LOGFILE
+        echo " ==== Backing up $HOST." >> "$LOGFILE"
+        echo "`date`: Ibaraki has STARTED backing up $HOST." >> "$SHORTLOGFILE"
+        if $0 $HOST 2>&1 >> "$LOGFILE"
         then
-            echo -n "Going to/from: " >> $LOGFILE
-            mkdir -p $BACKUPDIR/$HOST 2>&1 >> $LOGFILE
-            pushd $BACKUPDIR/$HOST 2>&1 >> $LOGFILE
-            TAILN=`echo $KEEPFILES + 1 | bc`
+            echo -n "Going to/from: " >> "$LOGFILE"
+            mkdir -p "$BACKUPDIR/$HOST" 2>&1 >> "$LOGFILE"
+            pushd "$BACKUPDIR/$HOST" 2>&1 >> "$LOGFILE"
+            TAILN="`echo $KEEPFILES + 1 | bc`"
             TOREMOVE="`ls -1t *.tar.* | tail -n+$TAILN`"
-            echo Files to remove: $TOREMOVE >> $LOGFILE
-            [ "$TOREMOVE" ] && rm $TOREMOVE 2>&1 >> $LOGFILE
-            echo -n "Returning to: " >> $LOGFILE
-            popd 2>&1 >> $LOGFILE
-            echo " ==== Backed up $HOST." >> $LOGFILE
-            echo "`date`: Ibaraki got SUCCESS backing up $HOST." >> $SHORTLOGFILE
+            echo "Files to remove: $TOREMOVE" >> "$LOGFILE"
+            [ "$TOREMOVE" ] && rm $TOREMOVE 2>&1 >> "$LOGFILE"
+            echo -n "Returning to: " >> "$LOGFILE"
+            popd 2>&1 >> "$LOGFILE"
+            echo " ==== Backed up $HOST." >> "$LOGFILE"
+            echo "`date`: Ibaraki got SUCCESS backing up $HOST." >> "$SHORTLOGFILE"
         else
-            echo " ==== Unable to back up $HOST!" >> $LOGFILE
-            echo "`date`: Ibaraki got FAILURE backing up $HOST.    [ !!! ]" >> $SHORTLOGFILE
+            echo " ==== Unable to back up $HOST!" >> "$LOGFILE"
+            echo "`date`: Ibaraki got FAILURE backing up $HOST.    [ !!! ]" >> "$SHORTLOGFILE"
         fi
     done
 else
     RV=0
     for HOST in $@
     do
-        . ${CONFIGDIR}/host_${HOST}.conf
-        . ${CONFIGDIR}/archiver_${ARCHIVER}.conf # ARCHIVER is defined in host_$HOST.conf
+        . "${CONFIGDIR}/host_${HOST}.conf"
+        . "${CONFIGDIR}/archiver_${ARCHIVER}.conf" # ARCHIVER is defined in host_$HOST.conf
         FILE="backup-`date +%Y%m%d-%H%M%S`"
         USERNAME="`echo $USER | cut -d: -f1`"
 
         # Copy original script to remote host
         echo "--- Copying script to remote host:"
-        ssh_run "Created $HOST:$TMPDIR." "Can't create $HOST:$TMPDIR." mkdir -p $TMPDIR || quit "\n--- Error communicating $HOST: unable to create working directory!"
-        scp_to $0 $TMPDIR/$REMOTENAME || quit "\n--- Error communicating $HOST: unable to upload remote side script!"
+        ssh_run "Created $HOST:$TMPDIR." "Can't create $HOST:$TMPDIR." mkdir -p "$TMPDIR" || quit "\n--- Error communicating $HOST: unable to create working directory!"
+        scp_to $0 "$TMPDIR/$REMOTENAME" || quit "\n--- Error communicating $HOST: unable to upload remote side script!"
 
         SUCCESS="no"
         for ATTEMPT in `seq 1 $ATTEMPTS`
@@ -133,13 +137,13 @@ else
             [ $ATTEMPT -ne 1 ] && echo "TRYING AGAIN"
 
             # Run --create
-            ssh_run "Remote script succeeded." "Remote script failed!" $TMPDIR/$REMOTENAME --create $FILE $USER $TMPDIR $ARCHIVER $ARCHPACK $ARCHTEST $ARCHARGS $ARCHEXT $SPECIFY_ARCHIVE_NAME $ENABLE_IONICE $ENABLE_CHECK $DIRECTORIES || continue
+            ssh_run "Remote script succeeded." "Remote script failed!" "\"$TMPDIR/$REMOTENAME\" --create \"$FILE\" \"$USER\" \"$TMPDIR\" \"$ARCHIVER\" \"$ARCHPACK\" \"$ARCHTEST\" \"$ARCHARGS\" \"$ARCHEXT\" \"$SPECIFY_ARCHIVE_NAME\" \"$ENABLE_IONICE\" \"$ENABLE_CHECK\" $DIRECTORIES" || continue
 
             # Determine size and checksum
             echo -e "--- Calculating a checksum:"
-            SRC_SIZE=`ssh_run '' 'Failure' stat --printf=%s $TMPDIR/$FILE.tar.$ARCHEXT 2>&1 | grep -v 'REMOTE CALL'`
-            SRC_MD5=`ssh_run '' 'Failure ' md5sum $TMPDIR/$FILE.tar.$ARCHEXT 2>&1 | grep -v 'REMOTE CALL' | cut -d' ' -f1`
-            echo $HOST:$TMPDIR/$FILE.tar.$ARCHEXT: Size=$SRC_SIZE, MD5=$SRC_MD5.
+            SRC_SIZE="`ssh_run '' 'Failure' stat --printf=%s "$TMPDIR/$FILE.tar.$ARCHEXT" 2>&1 | grep -v 'REMOTE CALL'`"
+            SRC_MD5="`ssh_run '' 'Failure ' md5sum "$TMPDIR/$FILE.tar.$ARCHEXT" 2>&1 | grep -v 'REMOTE CALL' | cut -d' ' -f1`"
+            echo "$HOST:$TMPDIR/$FILE.tar.$ARCHEXT: Size=$SRC_SIZE, MD5=$SRC_MD5."
             FAILED="no"
             echo "$SRC_SIZE" | grep -q 'Failure' && FAILED="yes"
             echo "$SRC_MD5" | grep -q 'Failure' && FAILED="yes"
@@ -151,24 +155,24 @@ else
             if scp_from "$TMPDIR/$FILE.tar.$ARCHEXT" "$BACKUPDIR/$HOST/$FILE.tar.$ARCHEXT"
             then
                 echo "--- Checking received file:"
-                ls -la $BACKUPDIR/$HOST/$FILE.tar.$ARCHEXT 2>&1
-                TGT_SIZE=`stat -c %s $BACKUPDIR/$HOST/$FILE.tar.$ARCHEXT 2>&1`
+                ls -la "$BACKUPDIR/$HOST/$FILE.tar.$ARCHEXT" 2>&1
+                TGT_SIZE="`stat -c %s "$BACKUPDIR/$HOST/$FILE.tar.$ARCHEXT" 2>&1`"
                 if [ "$TGT_SIZE" = "$SRC_SIZE" ]
                 then
-                    TGT_MD5=`md5sum $BACKUPDIR/$HOST/$FILE.tar.$ARCHEXT 2>&1 | cut -d' ' -f1`
+                    TGT_MD5="`md5sum "$BACKUPDIR/$HOST/$FILE.tar.$ARCHEXT" 2>&1 | cut -d' ' -f1`"
                     if [ "$TGT_MD5" = "$SRC_MD5" ]
                     then
                         echo "$BACKUPDIR/$HOST/$FILE.tar.$ARCHEXT: Size=$TGT_SIZE, MD5=$TGT_MD5, matched."
                         echo -n "Copying $BACKUPDIR/$HOST/$FILE.tar.$ARCHEXT -> $TMPDIR/$FILE.tar.$ARCHEXT..."
-                        mkdir -p $LOCAL_TMPDIR
-                        cp $BACKUPDIR/$HOST/$FILE.tar.$ARCHEXT $LOCAL_TMPDIR/$FILE.tar.$ARCHEXT
+                        mkdir -p "$LOCAL_TMPDIR"
+                        cp "$BACKUPDIR/$HOST/$FILE.tar.$ARCHEXT" "$LOCAL_TMPDIR/$FILE.tar.$ARCHEXT"
                         echo -n "Ok, calculating checksum..."
-                        TMP_MD5=`md5sum $LOCAL_TMPDIR/$FILE.tar.$ARCHEXT 2>&1 | cut -d' ' -f1`
+                        TMP_MD5="`md5sum "$LOCAL_TMPDIR/$FILE.tar.$ARCHEXT" 2>&1 | cut -d' ' -f1`"
                         echo "Ok."
                         if [ "$TGT_MD5" = "$TMP_MD5" ]
                         then
                             echo "Testing with $ARCHIVER:"
-                            if $ARCHIVER $ARCHTEST $ARCHARGS $LOCAL_TMPDIR/$FILE.tar.$ARCHEXT 2>&1
+                            if $ARCHIVER $ARCHTEST $ARCHARGS "$LOCAL_TMPDIR/$FILE.tar.$ARCHEXT" 2>&1
                             then
                                 SUCCESS="yes"
                                 break
@@ -195,12 +199,12 @@ else
         if [ "$DELETE_IF_GIVEN_UP" = "on" -o "$SUCCESS" = "yes" ]
         then
             echo -e "\n--- Deleting non needed $ARCHEXT file:"
-            ssh_run "Deleted $HOST:$TMPDIR/$FILE.tar.$ARCHEXT." "Can't delete $HOST:$TMPDIR/$FILE.tar.$ARCHEXT." rm $TMPDIR/$FILE.tar.$ARCHEXT
+            ssh_run "Deleted $HOST:$TMPDIR/$FILE.tar.$ARCHEXT." "Can't delete $HOST:$TMPDIR/$FILE.tar.$ARCHEXT." rm "$TMPDIR/$FILE.tar.$ARCHEXT"
         else
             echo -e "\n--- Exceeded attempts to download file, won't delete it on the server!"
         fi
-        ssh_run "Deleted $HOST:$TMPDIR/$REMOTENAME." "Can't delete $HOST:$TMPDIR/$REMOTENAME." rm $TMPDIR/$REMOTENAME
-        ssh_run "Deleted $HOST:$TMPDIR." "Can't delete $HOST:$TMPDIR." rmdir --ignore-fail-on-non-empty $TMPDIR
+        ssh_run "Deleted $HOST:$TMPDIR/$REMOTENAME." "Can't delete $HOST:$TMPDIR/$REMOTENAME." rm "$TMPDIR/$REMOTENAME"
+        ssh_run "Deleted $HOST:$TMPDIR." "Can't delete $HOST:$TMPDIR." rmdir --ignore-fail-on-non-empty "$TMPDIR"
         [ "$SUCCESS" = "no" ] && RV=`echo $RV + 1 | bc`
     done
     exit $RV
