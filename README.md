@@ -68,11 +68,16 @@ So there is a config file for each of them.
 
 You may add your own. Each archiver should support packing and testing operations, and should be able to pack any file to specified archive.
 
+Archiver definition file should consist of the following variables (all of them are mandatory):
+
 * `ARCHBIN`: Binary of archiver to call.
 * `ARCHARGS`: Archiver options to specify before all others (but after the command).
 * `ARCHPACK`: Command for packing.
 * `ARCHTEST`: Command for testing.
 * `ARCHEXT`: Extension of archive file.
+
+Also it can include the following flag (`on` or `off`, default is `off` if flag is not specified or set to incorrect value):
+
 * `SPECIFY_ARCHIVE_NAME`: Should we call archiver like `... sourcefile.arc sourcefile` (if `on`; typical for `7z`, `rar`, ...), or just `... sourcefile` to get `sourcefile.arc` (if `off`; typical for `gzip`, `plzip`, ...).
 
 Actually, archiver will be called in form:
@@ -82,7 +87,7 @@ Actually, archiver will be called in form:
 
 ### host_*.conf
 
-Should contain variables specific for host. Each host should have working `sshd` with SSH key authentication enabled.
+Should contain variables specific for host (all of them are mandatory). Each host should have working `sshd` with SSH key authentication enabled.
 
 * `HOSTNAME`: SSH hostname to connect.
 * `PORT`: SSH port to connect.
