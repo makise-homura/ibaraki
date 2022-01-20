@@ -35,6 +35,7 @@ This is the main config file and it should consist of the following variables (a
 * `KEEPFILES`: How much of previous backup files to keep in timed or automatic mode. Oldest files will be deleted if there's more of them than this number. No files are deleted in manual mode.
 * `ENABLE_IONICE`: `on` or `off`, try to lower IO priority for `tar` command with `ionice` (otherwise it might cause too much IO load that can render host, which is being backed up at the moment, unusable).
 * `ENABLE_CHECK`: `on` or `off`, check integrity of archive on host prior to uploading it to the backup server.
+* `IGNORE_FAIL_ON_NON_EMPTY`: `on` or `off`, silently ignore if temporary backup directory already contains files and thus was not deleted.
 * `LOCAL_TMPDIR`: Local (on the station where `ibaraki` is deployed) temporary directory to work in. Will be created if not exist, and then deleted if empty. Used to temporarily copy downloaded file there and run archive test locally.
 
 Example:
@@ -50,6 +51,7 @@ DELETE_IF_GIVEN_UP=off
 KEEPFILES=3
 ENABLE_IONICE=on
 ENABLE_CHECK=off
+IGNORE_FAIL_ON_NON_EMPTY=off
 LOCAL_TMPDIR=/tmp/backup
 ```
 

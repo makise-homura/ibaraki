@@ -204,7 +204,12 @@ else
             echo -e "\n--- Exceeded attempts to download file, won't delete it on the server!"
         fi
         ssh_run "Deleted $HOST:$TMPDIR/$REMOTENAME." "Can't delete $HOST:$TMPDIR/$REMOTENAME." rm "$TMPDIR/$REMOTENAME"
-        ssh_run "Deleted $HOST:$TMPDIR." "Can't delete $HOST:$TMPDIR." rmdir --ignore-fail-on-non-empty "$TMPDIR"
+        if ["$IGNORE_FAIL_ON_NON_EMPTY" = "on" ]
+        then
+            ssh_run "Deleted $HOST:$TMPDIR (if was empty)." "Can't delete $HOST:$TMPDIR." rmdir --ignore-fail-on-non-empty "$TMPDIR"
+        else
+            ssh_run "Deleted $HOST:$TMPDIR." "Can't delete $HOST:$TMPDIR, probably artifacts of older backup attempts exist." rmdir "$TMPDIR"
+        fi
         [ "$SUCCESS" = "no" ] && RV=`echo $RV + 1 | bc`
     done
     exit $RV
