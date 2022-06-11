@@ -11,7 +11,7 @@ quit()
 
 # Server part
 
-# Usage: $0 --create FILE USER TMPDIR ARCHIVER ARCHPACK ARCHTEST ARCHARGS ARCHEXT SPECIFY_ARCHIVE_NAME ENABLE_NICE ENABLE_IONICE CHECK_ON_HOST DIRECTORIES
+# Usage: $0 --create FILE USER TMPDIR ARCHBIN ARCHPACK ARCHTEST ARCHARGS ARCHEXT SPECIFY_ARCHIVE_NAME ENABLE_NICE ENABLE_IONICE CHECK_ON_HOST DIRECTORIES
 # .gvfs usually can't be opened, so usually it's skipped while tar-ing.
 # Also you can exclude any directory (and its subdirectories) from archiving, if you create .nobackup file there.
 if [ "$1" == "--create" ]
@@ -19,7 +19,7 @@ then
     FILE="${2}"
     USER="${3}"
     TMPDIR="${4}"
-    ARCHIVER="${5}"
+    ARCHBIN="${5}"
     ARCHPACK="${6}"
     ARCHTEST="${7}"
     ARCHARGS="${8}"
@@ -41,16 +41,16 @@ then
     sudo chown "$USER" "$TMPDIR/$FILE.tar" || quit "Error $? while chowning tar file."
     if [ "$SPECIFY_ARCHIVE_NAME" = "on" ]
     then
-        $NICE $ARCHIVER $ARCHPACK $ARCHARGS "$TMPDIR/$FILE.tar.$ARCHEXT" "$TMPDIR/$FILE.tar" || quit "Error $? while packing tar file into resulting $ARCHEXT file."
+        $NICE $ARCHBIN $ARCHPACK $ARCHARGS "$TMPDIR/$FILE.tar.$ARCHEXT" "$TMPDIR/$FILE.tar" || quit "Error $? while packing tar file into resulting $ARCHEXT file."
     else
-        $NICE $ARCHIVER $ARCHPACK $ARCHARGS "$TMPDIR/$FILE.tar" || quit "Error $? while packing tar file into resulting $ARCHEXT file."
+        $NICE $ARCHBIN $ARCHPACK $ARCHARGS "$TMPDIR/$FILE.tar" || quit "Error $? while packing tar file into resulting $ARCHEXT file."
     fi
     sudo rm "$TMPDIR/$FILE.tar" || quit "Error $? while removing tar file."
     if [ "$CHECK_ON_HOST" = "on" ]
     then
         echo "--- Checking integrity of $ARCHEXT file:"
         ls -la "$TMPDIR/$FILE.tar.$ARCHEXT" || quit "Error $? while listing resulting $ARCHEXT file."
-        $NICE $ARCHIVER $ARCHTEST $ARCHARGS "$TMPDIR/$FILE.tar.$ARCHEXT" || quit "Error $? while testing resulting $ARCHEXT file."
+        $NICE $ARCHBIN $ARCHTEST $ARCHARGS "$TMPDIR/$FILE.tar.$ARCHEXT" || quit "Error $? while testing resulting $ARCHEXT file."
     fi
     exit 0
 fi
@@ -140,7 +140,7 @@ else
             [ $ATTEMPT -ne 1 ] && echo "TRYING AGAIN (${ATTEMPT}/${ATTEMPTS})"
 
             # Run --create
-            ssh_run "Remote script succeeded." "Remote script failed!" "\"$TMPDIR/$REMOTENAME\" --create \"$FILE\" \"$USER\" \"$TMPDIR\" \"$ARCHIVER\" \"$ARCHPACK\" \"$ARCHTEST\" \"$ARCHARGS\" \"$ARCHEXT\" \"$SPECIFY_ARCHIVE_NAME\" \"$ENABLE_NICE\" \"$ENABLE_IONICE\" \"$CHECK_ON_HOST\" $DIRECTORIES" || continue
+            ssh_run "Remote script succeeded." "Remote script failed!" "\"$TMPDIR/$REMOTENAME\" --create \"$FILE\" \"$USER\" \"$TMPDIR\" \"$ARCHBIN\" \"$ARCHPACK\" \"$ARCHTEST\" \"$ARCHARGS\" \"$ARCHEXT\" \"$SPECIFY_ARCHIVE_NAME\" \"$ENABLE_NICE\" \"$ENABLE_IONICE\" \"$CHECK_ON_HOST\" $DIRECTORIES" || continue
 
             # Determine size and checksum
             echo -e "--- Calculating a checksum:"
@@ -178,7 +178,7 @@ else
                             if [ "$TGT_MD5" = "$TMP_MD5" ]
                             then
                                 echo "Testing $LOCAL_TMPDIR/$FILE.tar.$ARCHEXT with $ARCHIVER:"
-                                if $NICE $ARCHIVER $ARCHTEST $ARCHARGS "$LOCAL_TMPDIR/$FILE.tar.$ARCHEXT" 2>&1
+                                if $NICE $ARCHBIN $ARCHTEST $ARCHARGS "$LOCAL_TMPDIR/$FILE.tar.$ARCHEXT" 2>&1
                                 then
                                     SUCCESS="yes"
                                     break
@@ -190,7 +190,7 @@ else
                             fi
                         else
                             echo "Testing $BACKUPDIR/$HOST/$FILE.tar.$ARCHEXT with $ARCHIVER:"
-                            if $NICE $ARCHIVER $ARCHTEST $ARCHARGS "$BACKUPDIR/$HOST/$FILE.tar.$ARCHEXT" 2>&1
+                            if $NICE $ARCHBIN $ARCHTEST $ARCHARGS "$BACKUPDIR/$HOST/$FILE.tar.$ARCHEXT" 2>&1
                             then
                                 SUCCESS="yes"
                                 break
