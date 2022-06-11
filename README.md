@@ -36,6 +36,7 @@ This is the main config file and it should consist of the following variables (a
 
 Also it can include the following flags (`on` or `off`, default is `off` if flag is not specified or set to incorrect value):
 
+* `ENABLE_NICE`: try to lower CPU priority for archiver command with `nice` (otherwise it might cause too much CPU load that can render host, which is being backed up at the moment, unusable).
 * `ENABLE_IONICE`: try to lower IO priority for `tar` command with `ionice` (otherwise it might cause too much IO load that can render host, which is being backed up at the moment, unusable).
 * `DELETE_IF_GIVEN_UP`: should we delete compressed file on remote host if we've given up downloading it.
 * `CHECK_ON_HOST`: check integrity of archive on host prior to uploading it to the backup server (similar checks on backup server are performed always). Useful if host cache of RAM may be unreliable.
@@ -54,6 +55,7 @@ REMOTENAME="ibaraki_tmp.sh"
 LOCAL_TMPDIR=/tmp/backup
 ATTEMPTS=10
 KEEPFILES=3
+ENABLE_NICE=on
 ENABLE_IONICE=on
 CHECK_ON_HOST=off
 CHECK_BOTH_WAYS=on
