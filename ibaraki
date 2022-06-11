@@ -135,7 +135,7 @@ else
         SUCCESS="no"
         for ATTEMPT in `seq 1 $ATTEMPTS`
         do
-            [ $ATTEMPT -ne 1 ] && echo "TRYING AGAIN"
+            [ $ATTEMPT -ne 1 ] && echo "TRYING AGAIN (${ATTEMPT}/${ATTEMPTS})"
 
             # Run --create
             ssh_run "Remote script succeeded." "Remote script failed!" "\"$TMPDIR/$REMOTENAME\" --create \"$FILE\" \"$USER\" \"$TMPDIR\" \"$ARCHIVER\" \"$ARCHPACK\" \"$ARCHTEST\" \"$ARCHARGS\" \"$ARCHEXT\" \"$SPECIFY_ARCHIVE_NAME\" \"$ENABLE_IONICE\" \"$CHECK_ON_HOST\" $DIRECTORIES" || continue
