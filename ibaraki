@@ -163,10 +163,11 @@ else
                 if [ "$TGT_SIZE" = "$SRC_SIZE" ]
                 then
                     TGT_MD5="`md5sum "$BACKUPDIR/$HOST/$FILE.tar.$ARCHEXT" 2>&1 | cut -d' ' -f1`"
+                    echo "$BACKUPDIR/$HOST/$FILE.tar.$ARCHEXT: Size=$TGT_SIZE, MD5=$TGT_MD5."
                     if [ "$TGT_MD5" = "$SRC_MD5" ]
                     then
                         [ "$ENABLE_NICE" = "on" ] && NICE="nice -n19" || NICE=""
-                        echo "$BACKUPDIR/$HOST/$FILE.tar.$ARCHEXT: Size=$TGT_SIZE, MD5=$TGT_MD5, matched."
+                        echo "$BACKUPDIR/$HOST/$FILE.tar.$ARCHEXT: checksum is matched."
                         if [ "$CHECK_BOTH_WAYS" = "on" ]
                         then
                             echo -n "Copying $BACKUPDIR/$HOST/$FILE.tar.$ARCHEXT -> $LOCAL_TMPDIR/$FILE.tar.$ARCHEXT..."
