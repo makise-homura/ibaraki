@@ -75,9 +75,9 @@ ssh_run()
     shift 2
     [ "$DEBUG" = "on" ] && echo "REMOTE CALL @ $HOST: $@"
     ssh -tt -l "$USERNAME" -i "$SSHKEY" -o LogLevel=QUIET -o PreferredAuthentications=publickey -p "$PORT" "$HOSTNAME" -C "$@" 2>&1
-    RV=$?
-    [ $RV -eq 0 ] && echo "$ACK" || echo "$NAK"
-    return $RV
+    SSHRV=$?
+    [ $SSHRV -eq 0 ] && echo "$ACK" || echo "$NAK"
+    return $SSHRV
 }
 
 # Usage: scp_from REMOTESRC LOCALDEST
@@ -124,6 +124,8 @@ else
     RV=0
     for HOST in $@
     do
+        SUCCESS="no"
+
         . "${CONFIGDIR}/host_${HOST}.conf"
         . "${CONFIGDIR}/archiver_${ARCHIVER}.conf" # ARCHIVER is defined in host_$HOST.conf
         FILE="backup-`date +%Y%m%d-%H%M%S`"
@@ -134,7 +136,6 @@ else
         ssh_run "Created $HOST:$TMPDIR." "Can't create $HOST:$TMPDIR." "mkdir -p \"$TMPDIR\"" || quit "\n--- Error communicating $HOST: unable to create working directory!"
         scp_to $0 "$TMPDIR/$REMOTENAME" || quit "\n--- Error communicating $HOST: unable to upload remote side script!"
 
-        SUCCESS="no"
         for ATTEMPT in `seq 1 $ATTEMPTS`
         do
             [ $ATTEMPT -ne 1 ] && echo "TRYING AGAIN (${ATTEMPT}/${ATTEMPTS})"
